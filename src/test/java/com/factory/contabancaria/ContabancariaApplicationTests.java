@@ -94,4 +94,12 @@ class ContabancariaApplicationTests {
 				.andExpect(status().isOk());
 
 	}
+
+	//Teste se a conta está sendo deletada direito
+	@Test
+	public void testDeletarConta() throws Exception{
+		Long id = 1L;
+		mockMvc.perform(delete("/api/contas/{id}", id))
+				.andExpect(status().isOk());
+	}
 }
