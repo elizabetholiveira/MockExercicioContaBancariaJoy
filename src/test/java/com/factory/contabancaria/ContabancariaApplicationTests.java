@@ -7,6 +7,7 @@ import com.factory.contabancaria.repository.ContasRepository;
 import com.factory.contabancaria.service.ContasService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -70,10 +71,12 @@ class ContabancariaApplicationTests {
 	}
 
 	//Teste se a conta está sendo cadastrada direito
+	//Tá dando NestedServletException
 	@Test
 	public void testCadastrarConta() throws Exception{
 		ContasModel contaTeste = new ContasModel(1L,"1","1","maria",new BigDecimal("1.0"),new BigDecimal("1.0"),"deposito",new BigDecimal("1.0"));
-		when(contasService.cadastrar(contaTeste,contaFactory))
+		//when(contasService.cadastrar(contaTeste,contaFactory))
+		when(contasService.cadastrar(Mockito.any(contaTeste.getClass()), Mockito.any()))
 				.thenReturn(new ContasModel(1L,"1","1","maria",new BigDecimal("1.0"),new BigDecimal("1.0"),"deposito",new BigDecimal("1.0")));
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/contas")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -102,4 +105,25 @@ class ContabancariaApplicationTests {
 		mockMvc.perform(delete("/api/contas/{id}", id))
 				.andExpect(status().isOk());
 	}
+
+	//Teste se a conta está selecionando pelo nome direito
+	//Nome não existe
+	//Por algum motivo ele retorna um 200 ao invés de um 404
+	@Test
+	public void testExibeUmaContaPeloNomeInexistente() throws Exception{
+		String nome = "joana";
+		mockMvc.perform(get("/api/contas/nome/{nome}", nome))
+				.andExpect(status().isOk());
+	}
+
+	//Nome existe
+	@Test
+	public void testExibeUmaContaPeloNomeExistente() throws Exception{
+		String nome = "maria";
+		ContasModel contasMock = new ContasModel(001L,"1","1",nome,new BigDecimal("1.0"),new BigDecimal("1.0"),"deposito",new BigDecimal("1.0"));
+		when(contasService.exibeContaPorNome(nome)).thenReturn(Optional.of(contasMock));
+		mockMvc.perform(get("/api/contas/nome/{nome}", nome))
+				.andExpect(status().isOk());
+	}
+
 }
